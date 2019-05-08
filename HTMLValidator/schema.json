@@ -1,0 +1,30 @@
+{
+    "type": "object",
+    "properties": {
+        "Element": {
+            "type": "string",
+            "enum": [
+                "div"
+            ],
+            "required": true
+        },
+        "Attributes": {
+            "type": "object",
+            "required": true,
+            "properties": {
+                "class": {
+                    "required": true,
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "additionalItems": false,
+                        "enum": [
+                            "section",
+                            "section-slate02"
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}

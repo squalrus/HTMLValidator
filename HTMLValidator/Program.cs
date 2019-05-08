@@ -1,5 +1,7 @@
 ﻿using HtmlAgilityPack;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Schema;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,7 +14,9 @@ namespace HTMLValidator
     {
         static void Main(string[] args)
         {
-            var baseUrl = "https://azure.microsoft.com/en-us/solutions/";
+            var baseUrl = "https://azure.microsoft.com/en-us/services/functions/";
+
+            JSchema schema = JSchema.Parse(File.ReadAllText("../../../schema.json"));
 
             try
             {
@@ -35,13 +39,15 @@ namespace HTMLValidator
                 {
                     if (!complete)
                     {
-                        var json = JsonConvert.SerializeObject(node, Newtonsoft.Json.Formatting.Indented,
+                        var json = JsonConvert.SerializeObject(node, 
+                            Formatting.Indented,
                             new JsonSerializerSettings()
                             {
                                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore
                             });
 
                         Console.WriteLine(json);
+                        Console.WriteLine(JObject.Parse(json).IsValid(schema));
                     }
 
                     complete = true;
@@ -59,10 +65,8 @@ namespace HTMLValidator
 
     public class NewNode
     {
-        // public string Id { get; set; }
         public string Element { get; set; }
-        // public string[] Classes { get; set; }
-        public Dictionary<string, string> Attributes { get; set; }
+        public Dictionary<string, string[]> Attributes { get; set; }
         public NewNode[] ChildNodes { get; set; }
     }
 
@@ -77,10 +81,8 @@ namespace HTMLValidator
 
             return new NewNode
             {
-                // Id = node.Id,
-                // Classes = node.GetClasses().ToArray(),
                 Element = node.Name,
-                Attributes = node.Attributes.ToDictionary(x => x.Name, x => x.Value),
+                Attributes = node.Attributes.ToDictionary(x => x.Name, x => x.Value.Split(' ')),
                 ChildNodes = node.ChildNodes.ToNewNodes(),
             };
 
