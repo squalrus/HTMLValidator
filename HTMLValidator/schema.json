@@ -1,30 +1,150 @@
 {
     "type": "object",
-    "properties": {
-        "Element": {
+    "definitions": {
+        "div": {
             "type": "string",
             "enum": [
                 "div"
             ],
             "required": true
+        }
+    },
+    "properties": {
+        "Element": {
+            "$ref": "#/definitions/div"
         },
-        "Attributes": {
-            "type": "object",
-            "required": true,
-            "properties": {
-                "class": {
-                    "required": true,
-                    "type": "array",
-                    "items": {
-                        "type": "string",
-                        "additionalItems": false,
-                        "enum": [
-                            "section",
-                            "section-slate02"
-                        ]
+        "Classes": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "pattern": "^(section|section-slate02|section-[a-z-]+)$"
+            },
+            "required": true
+        },
+        "ChildNodes": {
+            "type": "array",
+            "items": [
+                {
+                    "properties": {
+                        "Element": {
+                            "$ref": "#/definitions/div"
+                        },
+                        "Classes": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "pattern": "^(row|column)$"
+                            },
+                            "required": true
+                        },
+                        "ChildNodes": {
+                            "type": "array",
+                            "items": {
+                                "properties": {
+                                    "Element": {
+                                        "type": "string",
+                                        "enum": [
+                                            "ul"
+                                        ],
+                                        "required": true
+                                    },
+                                    "Classes": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "pattern": "^(breadcrumbs)$"
+                                        },
+                                        "required": true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "Element": {
+                            "$ref": "#/definitions/div"
+                        },
+                        "Classes": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "pattern": "^(row)$"
+                            },
+                            "required": true
+                        },
+                        "ChildNodes": {
+                            "type": "array",
+                            "items": {
+                                "properties": {
+                                    "Element": {
+                                        "$ref": "#/definitions/div"
+                                    },
+                                    "Classes": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "pattern": "^(column|medium-8)$"
+                                        },
+                                        "required": true
+                                    },
+                                    "ChildNodes": {
+                                        "type": "array",
+                                        "items": [
+                                            {
+                                                "properties": {
+                                                    "Element": {
+                                                        "$ref": "#/definitions/div"
+                                                    },
+                                                    "Classes": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string",
+                                                            "pattern": "^(row|column)$"
+                                                        },
+                                                        "required": true
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "properties": {
+                                                    "Element": {
+                                                        "$ref": "#/definitions/div"
+                                                    },
+                                                    "Classes": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string",
+                                                            "pattern": "^(row|row-size1)$"
+                                                        },
+                                                        "required": true
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "properties": {
+                                                    "Element": {
+                                                        "$ref": "#/definitions/div"
+                                                    },
+                                                    "Classes": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string",
+                                                            "pattern": "^(row|row-size3|column)$"
+                                                        },
+                                                        "required": true
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
-            }
+            ]
         }
     }
 }

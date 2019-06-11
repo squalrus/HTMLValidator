@@ -14,7 +14,7 @@ namespace HTMLValidator
     {
         static void Main(string[] args)
         {
-            var baseUrl = "https://azure.microsoft.com/en-us/services/functions/";
+            var baseUrl = "https://azure.microsoft.com/en-us/services/bot-service/";
 
             JSchema schema = JSchema.Parse(File.ReadAllText("../../../schema.json"));
 
@@ -39,7 +39,7 @@ namespace HTMLValidator
                 {
                     if (!complete)
                     {
-                        var json = JsonConvert.SerializeObject(node, 
+                        var json = JsonConvert.SerializeObject(node,
                             Formatting.Indented,
                             new JsonSerializerSettings()
                             {
@@ -66,6 +66,7 @@ namespace HTMLValidator
     public class NewNode
     {
         public string Element { get; set; }
+        public string[] Classes { get; set; }
         public Dictionary<string, string[]> Attributes { get; set; }
         public NewNode[] ChildNodes { get; set; }
     }
@@ -74,18 +75,25 @@ namespace HTMLValidator
     {
         public static NewNode ToNewNode(this HtmlNode node)
         {
+            var classAttributes = node.Attributes.Where(x => x.Name == "class");
+
             if (node.Name == "#text" || node.Name == "svg")
             {
                 return null;
             }
 
-            return new NewNode
+            var newNode = new NewNode
             {
                 Element = node.Name,
                 Attributes = node.Attributes.ToDictionary(x => x.Name, x => x.Value.Split(' ')),
                 ChildNodes = node.ChildNodes.ToNewNodes(),
             };
 
+            if (classAttributes.Any() != false) {
+                newNode.Classes = classAttributes.First().Value.Split(' ');
+            }
+
+            return newNode;
         }
 
         public static NewNode[] ToNewNodes(this HtmlNodeCollection nodes)
