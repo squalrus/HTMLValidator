@@ -14,9 +14,9 @@ namespace HTMLValidator
     {
         static void Main(string[] args)
         {
-            var baseUrl = "https://azure.microsoft.com/en-us/services/bot-service/";
+            var baseUrl = "https://azure.microsoft.com/en-us/services/azure-bastion/";
 
-            JSchema schema = JSchema.Parse(File.ReadAllText("../../../schema.json"));
+            JSchema schema = JSchema.Parse(File.ReadAllText("../../../hero-basic-schema.json"));
 
             try
             {
@@ -46,11 +46,11 @@ namespace HTMLValidator
                                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore
                             });
 
-                        Console.WriteLine(json);
+                        // Console.WriteLine(json);
                         Console.WriteLine(JObject.Parse(json).IsValid(schema));
                     }
 
-                    complete = true;
+                    // complete = true;
                 }
 
                 response.Close();
@@ -67,7 +67,7 @@ namespace HTMLValidator
     {
         public string Element { get; set; }
         public string[] Classes { get; set; }
-        public Dictionary<string, string[]> Attributes { get; set; }
+        // public Dictionary<string, string[]> Attributes { get; set; }
         public NewNode[] ChildNodes { get; set; }
     }
 
@@ -85,7 +85,7 @@ namespace HTMLValidator
             var newNode = new NewNode
             {
                 Element = node.Name,
-                Attributes = node.Attributes.ToDictionary(x => x.Name, x => x.Value.Split(' ')),
+                // Attributes = node.Attributes.ToDictionary(x => x.Name, x => x.Value.Split(' ')),
                 ChildNodes = node.ChildNodes.ToNewNodes(),
             };
 

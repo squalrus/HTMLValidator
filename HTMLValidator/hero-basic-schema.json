@@ -7,6 +7,27 @@
                 "div"
             ],
             "required": true
+        },
+        "h1": {
+            "type": "string",
+            "enum": [
+                "h1"
+            ],
+            "required": true
+        },
+        "p": {
+            "type": "string",
+            "enum": [
+                "p"
+            ],
+            "required": true
+        },
+        "a": {
+            "type": "string",
+            "enum": [
+                "a"
+            ],
+            "required": true
         }
     },
     "properties": {
@@ -17,7 +38,7 @@
             "type": "array",
             "items": {
                 "type": "string",
-                "pattern": "^(section|section-slate02|section-[a-z-]+)$"
+                "pattern": "^(section|section-slate01|section-slate02|section-[a-z-]+)$"
             },
             "required": true
         },
@@ -91,6 +112,49 @@
                                     },
                                     "ChildNodes": {
                                         "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "Element": {
+                                                    "$ref": "#/definitions/h1"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "Element": {
+                            "$ref": "#/definitions/div"
+                        },
+                        "Classes": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "pattern": "^(row|row-size1)$"
+                            },
+                            "required": true
+                        },
+                        "ChildNodes": {
+                            "type": "array",
+                            "items": {
+                                "properties": {
+                                    "Element": {
+                                        "$ref": "#/definitions/div"
+                                    },
+                                    "Classes": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "pattern": "^(column|medium-5)$"
+                                        },
+                                        "required": true
+                                    },
+                                    "ChildNodes": {
+                                        "type": "array",
                                         "items": [
                                             {
                                                 "properties": {
@@ -104,21 +168,24 @@
                                                             "pattern": "^(row|column)$"
                                                         },
                                                         "required": true
-                                                    }
-                                                }
-                                            },
-                                            {
-                                                "properties": {
-                                                    "Element": {
-                                                        "$ref": "#/definitions/div"
                                                     },
-                                                    "Classes": {
+                                                    "ChildNodes": {
                                                         "type": "array",
                                                         "items": {
-                                                            "type": "string",
-                                                            "pattern": "^(row|row-size1)$"
-                                                        },
-                                                        "required": true
+                                                            "properties": {
+                                                                "Element": {
+                                                                    "$ref": "#/definitions/p"
+                                                                },
+                                                                "Classes": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "string",
+                                                                        "pattern": "^(text-body3)$"
+                                                                    },
+                                                                    "required": true
+                                                                }
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             },
@@ -134,6 +201,24 @@
                                                             "pattern": "^(row|row-size3|column)$"
                                                         },
                                                         "required": true
+                                                    },
+                                                    "ChildNodes": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "properties": {
+                                                                "Element": {
+                                                                    "$ref": "#/definitions/a"
+                                                                },
+                                                                "Classes": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "string",
+                                                                        "pattern": "^(button|button--free-account)$"
+                                                                    },
+                                                                    "required": true
+                                                                }
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             }
