@@ -1,0 +1,17 @@
+{
+    "definitions": {
+        "arrow-link": {
+            "Element": {
+                "$ref": "https://azurecomstats.blob.core.windows.net/temp/base.json#/definitions/a"
+            },
+            "Classes": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                    "pattern": "^(arrow-link)$"
+                },
+                "required": true
+            }
+        }
+    }
+}

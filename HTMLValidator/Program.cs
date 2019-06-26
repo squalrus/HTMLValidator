@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -44,6 +45,7 @@ namespace HTMLValidator
                 Stream dataStream = response.GetResponseStream();
                 StreamReader reader = new StreamReader(dataStream);
                 string payload = reader.ReadToEnd();
+                var validNodes = 0;
 
                 var htmlDoc = new HtmlDocument();
                 htmlDoc.LoadHtml(payload);
@@ -69,17 +71,35 @@ namespace HTMLValidator
                     {
                         var module = node.Attributes.Where(x => x.Key == "data-module").First().Value.First();
                         var schema = schemaJson.First(x => x.Slug == module)?.JsonSchema?.ToString();
+                        JSchemaUrlResolver resolver = new JSchemaUrlResolver();
+                        IList<string> messages;
 
                         if (schema == null)
                         {
-                            Console.WriteLine($"Unable to find schema for {module}");
+                            Console.WriteLine($"{module}: unable to find schema");
                         }
                         else
                         {
-                            Console.WriteLine(JObject.Parse(json).IsValid(JSchema.Parse(schema)));
+                            var isValid = JObject.Parse(json).IsValid(JSchema.Parse(schema, resolver), out messages);
+
+                            if (isValid)
+                            {
+                                Console.WriteLine($"{module}: {isValid}");
+                                validNodes++;
+                            }
+                            else
+                            {
+                                Console.WriteLine($"{module}: {isValid}");
+                                foreach (var message in messages)
+                                {
+                                    Console.WriteLine($"\t{message}");
+                                }
+                            }
                         }
                     }
                 }
+
+                Console.WriteLine($"\n{testUrl}: {Math.Truncate((decimal)validNodes / nodes.Count() * 100)}%");
 
                 response.Close();
             }
