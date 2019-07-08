@@ -18,11 +18,13 @@ namespace HTMLValidator
     public static class ValidateUrlMessage
     {
         [FunctionName("ValidateUrlMessage")]
-        public static void Run([QueueTrigger("urls", Connection = "AzureWebJobsStorage")]string myQueueItem, ILogger log)
+        [return: Table("coverage")]
+        public static Coverage Run([QueueTrigger("urls", Connection = "AzureWebJobsStorage")]string myQueueItem, ILogger log)
         {
             log.LogInformation("Processing validation.");
 
             string testUrl = myQueueItem;
+            string partitionKey = testUrl.ToSlug();
             List<string> output = new List<string>();
 
             var moduleUrl = "https://azurecomstats.blob.core.windows.net/temp/modules.json";
@@ -113,8 +115,8 @@ namespace HTMLValidator
                             }
                         }
                     }
-                    log.LogInformation($"\n{testUrl}: {Math.Truncate((decimal)validNodes / nodes.Count() * 100)}%");
-                    output.Add($"\n{testUrl}: {Math.Truncate((decimal)validNodes / nodes.Count() * 100)}%");
+                    log.LogInformation($"\n{testUrl}: {Math.Truncate((double)validNodes / nodes.Count() * 100)}%");
+                    output.Add($"\n{testUrl}: {Math.Truncate((double)validNodes / nodes.Count() * 100)}%");
                 }
                 else
                 {
@@ -122,11 +124,27 @@ namespace HTMLValidator
                 }
 
                 response.Close();
+
+                return new Coverage
+                {
+                    PartitionKey = partitionKey,
+                    RowKey = (DateTime.MaxValue.Ticks - DateTime.Now.Ticks).ToString(),
+                    Report = string.Join('\n', output),
+                    Percent = (double)validNodes / nodes.Count()
+                };
             }
             catch (WebException e)
             {
                 Console.WriteLine(e);
             }
+
+            return new Coverage
+            {
+                PartitionKey = partitionKey,
+                RowKey = (DateTime.MaxValue.Ticks - DateTime.Now.Ticks).ToString(),
+                Report = "Parsing failure",
+                Percent = 0
+            };
         }
     }
 }
