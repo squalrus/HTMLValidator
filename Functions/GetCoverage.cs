@@ -11,6 +11,8 @@ using HTMLValidator.Models;
 using System.Linq;
 using System.Collections.Generic;
 using HTMLValidator.Extensions;
+using Newtonsoft.Json;
+using System.Text;
 
 namespace HTMLValidator
 {
@@ -20,6 +22,7 @@ namespace HTMLValidator
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
             [Blob("latest/cleaned.txt", FileAccess.Read)] Stream blob,
+            [Blob("archive-coverage/{DateTime.Now}.json", FileAccess.Write)] Stream archiveCoverageBlob,
             [Table("coverage")] CloudTable cloudTable,
             ILogger log)
         {
@@ -61,6 +64,7 @@ namespace HTMLValidator
             }
 
             bundleData.Total = totalPercentage / urlList.Length;
+            archiveCoverageBlob.Write(Encoding.Default.GetBytes(JsonConvert.SerializeObject(bundleData)));
             return new JsonResult(bundleData);
         }
     }
