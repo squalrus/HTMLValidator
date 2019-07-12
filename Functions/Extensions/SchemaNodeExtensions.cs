@@ -5,9 +5,9 @@ using System.Linq;
 
 namespace HTMLValidator.Extensions
 {
-    public static class NewNodeExtensions
+    public static class SchemaNodeExtensions
     {
-        public static NewNode ToNewNode(this HtmlNode node)
+        public static SchemaNode ToSchemaNode(this HtmlNode node)
         {
             var classAttributes = node.Attributes.Where(x => x.Name == "class");
             var allAttributes = new Dictionary<string, string[]>();
@@ -17,10 +17,10 @@ namespace HTMLValidator.Extensions
                 return null;
             }
 
-            var newNode = new NewNode
+            var newNode = new SchemaNode
             {
                 Element = node.Name,
-                ChildNodes = node.ChildNodes.ToNewNodes(),
+                ChildNodes = node.ChildNodes.ToSchemaNodes(),
             };
 
             foreach (var attribute in node.Attributes)
@@ -41,13 +41,13 @@ namespace HTMLValidator.Extensions
             return newNode;
         }
 
-        public static NewNode[] ToNewNodes(this HtmlNodeCollection nodes)
+        public static SchemaNode[] ToSchemaNodes(this HtmlNodeCollection nodes)
         {
-            var newNodes = new List<NewNode>();
+            var newNodes = new List<SchemaNode>();
 
             foreach (var node in nodes)
             {
-                newNodes.Add(node.ToNewNode());
+                newNodes.Add(node.ToSchemaNode());
             }
 
             return newNodes.Where(x => x != null).ToArray();

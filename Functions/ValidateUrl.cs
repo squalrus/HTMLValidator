@@ -35,9 +35,9 @@ namespace HTMLValidator
             testUrl = testUrl ?? data?.testUrl;
             List<string> output = new List<string>();
 
-            var moduleUrl = "https://azurecomstats.blob.core.windows.net/temp/modules.json";
+            var moduleUrl = "https://sundog.azure.net/api/modules?status=1";
 
-            Schema[] schemaJson = null;
+            ModuleSchema[] schemaJson = null;
 
             try
             {
@@ -47,7 +47,7 @@ namespace HTMLValidator
                 StreamReader reader = new StreamReader(dataStream);
                 string payload = reader.ReadToEnd();
 
-                schemaJson = JsonConvert.DeserializeObject<Schema[]>(payload);
+                schemaJson = JsonConvert.DeserializeObject<ModuleSchema[]>(payload);
 
                 response.Close();
             }
@@ -70,7 +70,7 @@ namespace HTMLValidator
 
                 var nodes = htmlDoc.DocumentNode
                     .SelectNodes("//main//*[contains(concat(' ', @class, ' '), ' section ')]")
-                    ?.Select(x => x.ToNewNode());
+                    ?.Select(x => x.ToSchemaNode());
 
                 if (nodes != null)
                 {
@@ -91,7 +91,7 @@ namespace HTMLValidator
                         else
                         {
                             var module = node.Attributes.Where(x => x.Key == "data-module").First().Value.First();
-                            var schema = schemaJson.FirstOrDefault(x => x.Slug == module)?.JsonSchema?.ToString();
+                            var schema = schemaJson.FirstOrDefault(x => x.Slug == module)?.Schema?.ToString();
                             JSchemaUrlResolver resolver = new JSchemaUrlResolver();
                             IList<string> messages;
 

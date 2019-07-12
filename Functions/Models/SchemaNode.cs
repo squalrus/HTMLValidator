@@ -2,11 +2,11 @@
 
 namespace HTMLValidator.Models
 {
-    public class NewNode
+    public class SchemaNode
     {
         public string Element { get; set; }
         public string[] Classes { get; set; }
-        public NewNode[] ChildNodes { get; set; }
+        public SchemaNode[] ChildNodes { get; set; }
         public Dictionary<string, string[]> Attributes { get; set; }
     }
 }

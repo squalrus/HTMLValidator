@@ -94,9 +94,9 @@ namespace HTMLValidator
             log.LogInformation($"Writing to Blob Storage complete.");
 
             log.LogInformation($"Queueing messages start.");
-            // Parallel.ForEach(distinctUrls, async x => {
-            //     await msg.AddAsync(x);
-            // });
+            Parallel.ForEach(cleanedUrls, async x => {
+                await msg.AddAsync(x);
+            });
             log.LogInformation($"Queueing messages complete.");
         }
     }

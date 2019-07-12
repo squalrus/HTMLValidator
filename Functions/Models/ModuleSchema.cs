@@ -2,9 +2,9 @@
 
 namespace HTMLValidator.Models
 {
-    public class Schema
+    public class ModuleSchema
     {
         public string Slug { get; set; }
-        public JObject JsonSchema { get; set; }
+        public JObject Schema { get; set; }
     }
 }
