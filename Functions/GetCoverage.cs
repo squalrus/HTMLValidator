@@ -32,6 +32,7 @@ namespace HTMLValidator
             string content = reader.ReadToEnd();
             var urlList = content.Split('\n');
             double totalPercentage = 0;
+            int totalUrlList = 0;
 
             Report bundleData = new Report();
             bundleData.Coverage = new System.Collections.Generic.Dictionary<string, double>();
@@ -52,8 +53,9 @@ namespace HTMLValidator
                     {
                         if (!bundleData.Coverage.Keys.Contains(entity.First().PartitionKey))
                         {
-                            bundleData.Coverage.Add(entity.First().PartitionKey, entity.First().Percent);
+                            bundleData.Coverage.Add(entity.First().PartitionKey, entity.First().Percent * 100);
                             totalPercentage += entity.First().Percent;
+                            totalUrlList++;
                         }
                     }
                 }
@@ -63,7 +65,8 @@ namespace HTMLValidator
                 }
             }
 
-            bundleData.Total = totalPercentage / urlList.Length;
+            bundleData.Total = totalPercentage / totalUrlList * 100;
+            bundleData.Urls = totalUrlList;
             archiveCoverageBlob.Write(Encoding.Default.GetBytes(JsonConvert.SerializeObject(bundleData)));
             return new JsonResult(bundleData);
         }
