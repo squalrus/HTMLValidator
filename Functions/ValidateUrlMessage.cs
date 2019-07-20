@@ -19,7 +19,9 @@ namespace HTMLValidator
     {
         [FunctionName("ValidateUrlMessage")]
         [return: Table("coverage")]
-        public static Coverage Run([QueueTrigger("urls", Connection = "AzureWebJobsStorage")]string myQueueItem, ILogger log)
+        public static Coverage Run(
+            [QueueTrigger("urls", Connection = "AzureWebJobsStorage")] string myQueueItem,
+            ILogger log)
         {
             log.LogInformation("Processing validation.");
 

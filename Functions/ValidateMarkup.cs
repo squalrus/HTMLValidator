@@ -15,23 +15,22 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace HTMLValidator
 {
-    public static class ValidateUrl
+    public static class ValidateMarkup
     {
-        [FunctionName("ValidateUrl")]
+        [FunctionName("ValidateMarkup")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
             log.LogInformation("Processing validation.");
 
-            string testUrl = req.Query["url"];
-
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            dynamic data = JsonConvert.DeserializeObject(requestBody);
-            testUrl = testUrl ?? data?.testUrl;
+            var requestClean = requestBody.Replace("markup=", "").Replace("\"", "");
+            var markup = HttpUtility.UrlDecode(requestClean);
             List<string> output = new List<string>();
 
             var moduleUrl = "https://sundog.azure.net/api/modules?status=1";
@@ -57,15 +56,9 @@ namespace HTMLValidator
 
             try
             {
-                WebRequest request = WebRequest.Create(testUrl);
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                Stream dataStream = response.GetResponseStream();
-                StreamReader reader = new StreamReader(dataStream);
-                string payload = reader.ReadToEnd();
                 var validNodes = 0;
-
                 var htmlDoc = new HtmlDocument();
-                htmlDoc.LoadHtml(payload);
+                htmlDoc.LoadHtml(markup);
 
                 var nodes = htmlDoc.DocumentNode
                     .SelectNodes("//main//*[contains(concat(' ', @class, ' '), ' section ')]")
@@ -122,25 +115,22 @@ namespace HTMLValidator
                             }
                         }
                     }
-                    Console.WriteLine($"\n{testUrl}: {Math.Truncate((decimal)validNodes / nodes.Count() * 100)}%");
-                    output.Add($"\n{testUrl}: {Math.Truncate((decimal)validNodes / nodes.Count() * 100)}%");
+                    Console.WriteLine($"\nmarkup: {Math.Truncate((decimal)validNodes / nodes.Count() * 100)}%");
+                    output.Add($"\nmarkup: {Math.Truncate((decimal)validNodes / nodes.Count() * 100)}%");
                 }
                 else
                 {
                     output.Add("URL must be on https://azure.microsoft.com with \"section\" classes present.");
                 }
-
-                response.Close();
             }
             catch (WebException e)
             {
                 Console.WriteLine(e);
             }
 
-
-            return testUrl != null
+            return markup != null
                 ? (ActionResult)new OkObjectResult($"{string.Join('\n', output)}")
-                : new BadRequestObjectResult("Please pass a url on the query string or in the request body");
+                : new BadRequestObjectResult("Please pass markup in the request body");
         }
     }
 }
