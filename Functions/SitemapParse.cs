@@ -84,6 +84,7 @@ namespace HTMLValidator
                 !Regex.IsMatch(x, @"https:\/\/azure\.microsoft\.com\/en-us\/case-studies\/(.*?)") &&
                 !Regex.IsMatch(x, @"https:\/\/azure\.microsoft\.com\/en-us\/community\/events\/(.*?)\/") &&
                 !Regex.IsMatch(x, @"https:\/\/azure\.microsoft\.com\/en-us\/industries\/podcast\/(.*?)\/") &&
+                !Regex.IsMatch(x, @"https:\/\/azure\.microsoft\.com\/en-us\/services\/open-datasets\/catalog\/(.*?)\/") &&
                 !Regex.IsMatch(x, @"https:\/\/azure\.microsoft\.com\/en-us\/solutions\/architecture\/(.*?)\/"));
 
 
