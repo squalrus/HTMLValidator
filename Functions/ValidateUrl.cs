@@ -34,26 +34,7 @@ namespace HTMLValidator
             testUrl = testUrl ?? data?.testUrl;
             List<string> output = new List<string>();
 
-            var moduleUrl = "https://sundog.azure.net/api/modules?status=1";
-
-            ModuleSchema[] schemaJson = null;
-
-            try
-            {
-                WebRequest request = WebRequest.Create(moduleUrl);
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                Stream dataStream = response.GetResponseStream();
-                StreamReader reader = new StreamReader(dataStream);
-                string payload = reader.ReadToEnd();
-
-                schemaJson = JsonConvert.DeserializeObject<ModuleSchema[]>(payload);
-
-                response.Close();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
+            ModuleSchema[] schemaJson = ValidateHtml.GetModuleSchemas();
 
             try
             {
