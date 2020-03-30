@@ -1,5 +1,5 @@
 ﻿using HtmlAgilityPack;
-using HTMLValidator.Models;
+using HTMLValidator.Models.Validate;
 using System.Collections.Generic;
 using System.Linq;
 

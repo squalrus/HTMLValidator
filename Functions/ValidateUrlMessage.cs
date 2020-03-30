@@ -1,7 +1,6 @@
 using HtmlAgilityPack;
 using HTMLValidator.Extensions;
-using HTMLValidator.Models;
-using Microsoft.AspNetCore.Mvc;
+using HTMLValidator.Models.Validate;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -21,6 +20,7 @@ namespace HTMLValidator
         [return: Table("coverage")]
         public static Coverage Run(
             [QueueTrigger("urls", Connection = "AzureWebJobsStorage")] string myQueueItem,
+            [Blob("latest/modules.txt", FileAccess.Read)] string modulePayload,
             ILogger log)
         {
             log.LogInformation("Processing validation.");
@@ -29,21 +29,11 @@ namespace HTMLValidator
             string partitionKey = testUrl.ToSlug();
             List<string> output = new List<string>();
 
-            var moduleUrl = "https://sundog.azure.net/api/modules?status=1";
-
             ModuleSchema[] schemaJson = null;
 
             try
             {
-                WebRequest request = WebRequest.Create(moduleUrl);
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                Stream dataStream = response.GetResponseStream();
-                StreamReader reader = new StreamReader(dataStream);
-                string payload = reader.ReadToEnd();
-
-                schemaJson = JsonConvert.DeserializeObject<ModuleSchema[]>(payload);
-
-                response.Close();
+                schemaJson = JsonConvert.DeserializeObject<ModuleSchema[]>(modulePayload);
             }
             catch (Exception e)
             {

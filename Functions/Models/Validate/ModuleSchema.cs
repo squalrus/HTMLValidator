@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 
-namespace HTMLValidator.Models
+namespace HTMLValidator.Models.Validate
 {
     public class ModuleSchema
     {

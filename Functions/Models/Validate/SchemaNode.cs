@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace HTMLValidator.Models
+namespace HTMLValidator.Models.Validate
 {
     public class SchemaNode
     {

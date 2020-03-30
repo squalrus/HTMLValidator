@@ -1,6 +1,7 @@
 using HtmlAgilityPack;
 using HTMLValidator.Extensions;
-using HTMLValidator.Models;
+using HTMLValidator.Models.SitemapParse;
+using HTMLValidator.Models.Validate;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -33,21 +34,12 @@ namespace HTMLValidator
             var markup = HttpUtility.UrlDecode(requestClean);
             List<string> output = new List<string>();
 
-            var moduleUrl = "https://sundog.azure.net/api/modules?status=1";
-
             ModuleSchema[] schemaJson = null;
 
             try
             {
-                WebRequest request = WebRequest.Create(moduleUrl);
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                Stream dataStream = response.GetResponseStream();
-                StreamReader reader = new StreamReader(dataStream);
-                string payload = reader.ReadToEnd();
-
+                string payload = Payload.Get("https://sundog.azure.net/api/modules?status=1", log);
                 schemaJson = JsonConvert.DeserializeObject<ModuleSchema[]>(payload);
-
-                response.Close();
             }
             catch (Exception e)
             {

@@ -1,3 +1,7 @@
+using HTMLValidator.Models.SitemapParse;
+using Microsoft.Azure.WebJobs;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,8 +10,6 @@ using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Extensions.Logging;
 
 namespace HTMLValidator
 {
@@ -15,15 +17,18 @@ namespace HTMLValidator
     {
         [FunctionName("SitemapParse")]
         public static async Task Run(
-            [TimerTrigger("0 0 0 * * *")] TimerInfo myTimer,
+            [TimerTrigger("0 0 0 * * *", RunOnStartup = true)] TimerInfo myTimer,
             [Queue("urls"), StorageAccount("AzureWebJobsStorage")] IAsyncCollector<string> msg,
             [Blob("latest/full.txt", FileAccess.Write)] Stream latestFullBlob,
             [Blob("latest/cleaned.txt", FileAccess.Write)] Stream latestCleanedBlob,
+            [Blob("latest/modules.txt", FileAccess.Write)] Stream latestModulesBlob,
             [Blob("archive-full/{DateTime.Now}.txt", FileAccess.Write)] Stream archiveFullBlob,
             [Blob("archive-cleaned/{DateTime.Now}.txt", FileAccess.Write)] Stream archiveCleanedBlob,
             ILogger log)
         {
-            var baseUrl = "https://azure.microsoft.com/robotsitemap/en-us/{0}/";
+            var azurecomUrl = "https://azure.microsoft.com/robotsitemap/en-us/{0}/";
+            string sundogPayload = Payload.Get("https://sundog.azure.net/api/modules?status=1", log);
+
             List<string> urls = new List<string>();
             var completed = false;
             var pageNum = 1;
@@ -32,11 +37,7 @@ namespace HTMLValidator
             {
                 try
                 {
-                    WebRequest request = WebRequest.Create(string.Format(baseUrl, pageNum));
-                    HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                    Stream dataStream = response.GetResponseStream();
-                    StreamReader reader = new StreamReader(dataStream);
-                    string payload = reader.ReadToEnd();
+                    string payload = Payload.Get(string.Format(azurecomUrl, pageNum), log);
                     log.LogInformation($"Processing page {pageNum}...");
 
                     var matches = Regex.Matches(payload, @"<loc>(.*?)<\/loc>");
@@ -53,8 +54,6 @@ namespace HTMLValidator
                         completed = true;
                         log.LogInformation($"found 0 URLs -- completed!\n");
                     }
-
-                    response.Close();
                 }
                 catch (WebException e)
                 {
@@ -91,6 +90,7 @@ namespace HTMLValidator
             log.LogInformation($"Writing to Blob Storage start.");
             latestFullBlob.Write(Encoding.Default.GetBytes(string.Join('\n', distinctUrls)));
             latestCleanedBlob.Write(Encoding.Default.GetBytes(string.Join('\n', cleanedUrls)));
+            latestModulesBlob.Write(Encoding.Default.GetBytes(sundogPayload));
             archiveFullBlob.Write(Encoding.Default.GetBytes(string.Join('\n', distinctUrls)));
             archiveCleanedBlob.Write(Encoding.Default.GetBytes(string.Join('\n', cleanedUrls)));
             log.LogInformation($"Writing to Blob Storage complete.");
