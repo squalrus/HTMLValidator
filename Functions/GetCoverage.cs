@@ -1,6 +1,6 @@
 using HTMLValidator.Extensions;
-using HTMLValidator.Models;
 using HTMLValidator.Models.GetCoverage;
+using HTMLValidator.Models.Validate;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;

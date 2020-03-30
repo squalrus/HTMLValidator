@@ -1,6 +1,6 @@
 using Microsoft.WindowsAzure.Storage.Table;
 
-namespace HTMLValidator.Models
+namespace HTMLValidator.Models.Validate
 {
     public class Coverage : TableEntity
     {
