@@ -1,18 +1,19 @@
-using System;
-using System.IO;
-using System.Threading.Tasks;
+using HTMLValidator.Extensions;
+using HTMLValidator.Models;
+using HTMLValidator.Models.GetCoverage;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage.Table;
-using HTMLValidator.Models;
-using System.Linq;
-using System.Collections.Generic;
-using HTMLValidator.Extensions;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace HTMLValidator
 {
@@ -29,33 +30,40 @@ namespace HTMLValidator
             log.LogInformation("C# HTTP trigger function processed a request.");
 
             StreamReader reader = new StreamReader(blob);
-            string content = reader.ReadToEnd();
+            var content = reader.ReadToEnd();
             var urlList = content.Split('\n');
-            double totalPercentage = 0;
-            int totalUrlList = 0;
 
-            Report bundleData = new Report();
-            bundleData.Coverage = new System.Collections.Generic.Dictionary<string, double>();
-
-            List<string> filterSet = new List<string>();
+            double overallCoverage = 0;
+            int testedUrls = 0;
+            var bundleData = new Report
+            {
+                Coverage = new Dictionary<string, Page>()
+            };
 
             foreach (var url in urlList)
             {
                 try
                 {
-                    var fullQuery = new TableQuery<Coverage>().Where(
+                    var query = new TableQuery<Coverage>().Where(
                         TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, url.ToSlug())
                     ).Take(1);
 
-                    var entity = (await cloudTable.ExecuteQuerySegmentedAsync(fullQuery, null)).Results;
+                    var entity = (await cloudTable.ExecuteQuerySegmentedAsync(query, null)).Results;
 
                     if (entity != null)
                     {
                         if (!bundleData.Coverage.Keys.Contains(entity.First().PartitionKey))
                         {
-                            bundleData.Coverage.Add(entity.First().PartitionKey, entity.First().Percent * 100);
-                            totalPercentage += entity.First().Percent;
-                            totalUrlList++;
+                            var page = new Page
+                            {
+                                Coverage = entity.First().Percent * 100,
+                                Url = url,
+                                TestUrl = $"https://htmlvalidator.azurewebsites.net/api/ValidateUrl?url={url}"
+                            };
+                            bundleData.Coverage.Add(entity.First().PartitionKey, page);
+
+                            overallCoverage += entity.First().Percent;
+                            testedUrls++;
                         }
                     }
                 }
@@ -65,8 +73,8 @@ namespace HTMLValidator
                 }
             }
 
-            bundleData.Total = totalPercentage / totalUrlList * 100;
-            bundleData.Urls = totalUrlList;
+            bundleData.Total = overallCoverage / testedUrls * 100;
+            bundleData.Urls = testedUrls;
             archiveCoverageBlob.Write(Encoding.Default.GetBytes(JsonConvert.SerializeObject(bundleData)));
             return new JsonResult(bundleData);
         }
