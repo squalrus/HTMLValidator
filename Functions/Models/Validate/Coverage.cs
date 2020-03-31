@@ -6,5 +6,6 @@ namespace HTMLValidator.Models.Validate
     {
         public string Report { get; set; }
         public double Percent { get; set; }
+        public string ClassList { get; set; }
     }
 }

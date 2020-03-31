@@ -1,15 +1,11 @@
-using HtmlAgilityPack;
 using HTMLValidator.Extensions;
+using HTMLValidator.Models;
 using HTMLValidator.Models.Validate;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Schema;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 
 namespace HTMLValidator
@@ -23,118 +19,47 @@ namespace HTMLValidator
             [Blob("latest/modules.txt", FileAccess.Read)] string modulePayload,
             ILogger log)
         {
-            log.LogInformation("Processing validation.");
+            log.LogInformation("Processing ValidateUrlMessage.");
 
-            string testUrl = myQueueItem;
-            string partitionKey = testUrl.ToSlug();
-            List<string> output = new List<string>();
-
-            ModuleSchema[] schemaJson = null;
-
-            try
-            {
-                schemaJson = JsonConvert.DeserializeObject<ModuleSchema[]>(modulePayload);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
+            string slug = myQueueItem.ToSlug();
+            string reverseTicks = (DateTime.MaxValue.Ticks - DateTime.Now.Ticks).ToString();
+            ModuleSchema[] schema = null;
+            ReportPage report = null;
 
             try
             {
-                WebRequest request = WebRequest.Create(testUrl);
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                Stream dataStream = response.GetResponseStream();
-                StreamReader reader = new StreamReader(dataStream);
-                string payload = reader.ReadToEnd();
-                var validNodes = 0;
+                schema = JsonConvert.DeserializeObject<ModuleSchema[]>(modulePayload);
+            }
+            catch (Exception ex)
+            {
+                log.LogInformation($"Failed to generate module schema: {ex}");
+            }
 
-                var htmlDoc = new HtmlDocument();
-                htmlDoc.LoadHtml(payload);
-
-                var nodes = htmlDoc.DocumentNode
-                    .SelectNodes("//main//*[contains(concat(' ', @class, ' '), ' section ')]")
-                    ?.Select(x => x.ToSchemaNode());
-
-                if (nodes != null)
-                {
-                    foreach (var node in nodes)
-                    {
-                        var json = JsonConvert.SerializeObject(node,
-                            Formatting.Indented,
-                            new JsonSerializerSettings()
-                            {
-                                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-                            });
-
-                        if (!node.Attributes.ContainsKey("data-module"))
-                        {
-                            log.LogInformation("Missing data-module");
-                            output.Add("Missing data-module");
-                        }
-                        else
-                        {
-                            var module = node.Attributes.Where(x => x.Key == "data-module").First().Value.First();
-                            var schema = schemaJson.FirstOrDefault(x => x.Slug == module)?.Schema?.ToString();
-                            JSchemaUrlResolver resolver = new JSchemaUrlResolver();
-                            IList<string> messages;
-
-                            if (schema == null)
-                            {
-                                log.LogInformation($"{module}: unable to find schema");
-                                output.Add($"{module}: unable to find schema");
-                            }
-                            else
-                            {
-                                var isValid = JObject.Parse(json).IsValid(JSchema.Parse(schema, resolver), out messages);
-
-                                if (isValid)
-                                {
-                                    log.LogInformation($"{module}: {isValid}");
-                                    output.Add($"{module}: {isValid}");
-                                    validNodes++;
-                                }
-                                else
-                                {
-                                    log.LogInformation($"{module}: {isValid}");
-                                    output.Add($"{module}: {isValid}");
-                                    foreach (var message in messages)
-                                    {
-                                        log.LogInformation($"\t{message}");
-                                        output.Add($"\t{message}");
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    log.LogInformation($"\n{testUrl}: {Math.Truncate((double)validNodes / nodes.Count() * 100)}%");
-                    output.Add($"\n{testUrl}: {Math.Truncate((double)validNodes / nodes.Count() * 100)}%");
-                }
-                else
-                {
-                    output.Add("URL must be on https://azure.microsoft.com with \"section\" classes present.");
-                }
-
-                response.Close();
+            try
+            {
+                string html = Payload.Get(myQueueItem, log);
+                report = new Validator(html, schema).Process();
 
                 return new Coverage
                 {
-                    PartitionKey = partitionKey,
-                    RowKey = (DateTime.MaxValue.Ticks - DateTime.Now.Ticks).ToString(),
-                    Report = string.Join('\n', output),
-                    Percent = (double)validNodes / nodes.Count()
+                    PartitionKey = slug,
+                    RowKey = reverseTicks,
+                    Report = JsonConvert.SerializeObject(report.Modules),
+                    ClassList = JsonConvert.SerializeObject(report.Classes),
+                    Percent = (double)report.Total
                 };
             }
-            catch (WebException e)
+            catch (WebException ex)
             {
-                Console.WriteLine(e);
+                log.LogInformation($"Failed to validate message: {ex}");
             }
 
             return new Coverage
             {
-                PartitionKey = partitionKey,
-                RowKey = (DateTime.MaxValue.Ticks - DateTime.Now.Ticks).ToString(),
+                PartitionKey = slug,
+                RowKey = reverseTicks,
                 Report = "Parsing failure",
+                ClassList = null,
                 Percent = 0
             };
         }

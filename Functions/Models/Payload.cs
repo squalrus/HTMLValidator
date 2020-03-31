@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using System.Net;
 
-namespace HTMLValidator.Models.SitemapParse
+namespace HTMLValidator.Models
 {
     public static class Payload
     {
