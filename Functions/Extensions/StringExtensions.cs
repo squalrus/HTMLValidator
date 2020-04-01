@@ -6,5 +6,9 @@ namespace HTMLValidator.Extensions
         {
             return s.Replace("https://", "").TrimEnd('/').Replace("/", "_");
         }
+        public static string ToUrl(this string s)
+        {
+            return $"https://{s.Replace("_", "/")}/";
+        }
     }
 }
