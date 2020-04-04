@@ -17,7 +17,7 @@ namespace HTMLValidator
     {
         [FunctionName("ClassParse")]
         public static async Task Run(
-            [TimerTrigger("0 0 1 * * *", RunOnStartup = true)] TimerInfo myTimer,
+            [TimerTrigger("0 0 1 * * *")] TimerInfo myTimer,
             [Blob("latest/cleaned.txt", FileAccess.Read)] Stream blob,
             [Table("coverage")] CloudTable cloudTable,
             [Table("classes{DateTime:yyyyMMdd}")] CloudTable nextClassTable,
