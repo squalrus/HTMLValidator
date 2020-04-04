@@ -1,6 +1,5 @@
 using HTMLValidator.Extensions;
 using HTMLValidator.Models.GetCoverage;
-using HTMLValidator.Models.Validate;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -22,59 +21,49 @@ namespace HTMLValidator
         [FunctionName("GetCoverage")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
-            [Blob("latest/cleaned.txt", FileAccess.Read)] Stream blob,
             [Blob("archive-coverage/{DateTime.Now}.json", FileAccess.Write)] Stream archiveCoverageBlob,
-            [Table("coverage")] CloudTable cloudTable,
+            [Table("coverage{DateTime:yyyyMMdd}")] CloudTable cloudTable,
             ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
 
-            StreamReader reader = new StreamReader(blob);
-            var content = reader.ReadToEnd();
-            var urlList = content.Split('\n');
-
-            double overallCoverage = 0;
-            int testedUrls = 0;
+            double totalCoverage = 0;
             var bundleData = new Report
             {
                 Coverage = new Dictionary<string, Page>()
             };
+            List<Models.CoverageParse.Page> entity = new List<Models.CoverageParse.Page>();
 
-            foreach (var url in urlList)
+            try
             {
-                try
+                var query = new TableQuery<HTMLValidator.Models.CoverageParse.Page>().Where(
+                    TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, "coverage")
+                );
+
+                entity = (await cloudTable.ExecuteQuerySegmentedAsync(query, null)).Results;
+
+                foreach (var item in entity)
                 {
-                    var query = new TableQuery<Coverage>().Where(
-                        TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, url.ToSlug())
-                    ).Take(1);
-
-                    var entity = (await cloudTable.ExecuteQuerySegmentedAsync(query, null)).Results;
-
-                    if (entity != null)
+                    if (!bundleData.Coverage.Keys.Contains(item.RowKey))
                     {
-                        if (!bundleData.Coverage.Keys.Contains(entity.First().PartitionKey))
+                        var page = new HTMLValidator.Models.GetCoverage.Page
                         {
-                            var page = new Page
-                            {
-                                Coverage = entity.First().Percent * 100,
-                                Url = url,
-                                TestUrl = $"https://htmlvalidator.azurewebsites.net/api/ValidateUrl?url={url}"
-                            };
-                            bundleData.Coverage.Add(entity.First().PartitionKey, page);
-
-                            overallCoverage += entity.First().Percent;
-                            testedUrls++;
-                        }
+                            Coverage = item.Coverage,
+                            Url = item.RowKey.ToUrl(),
+                            TestUrl = $"https://htmlvalidator.azurewebsites.net/api/ValidateUrl?url={item.RowKey.ToUrl()}"
+                        };
+                        bundleData.Coverage.Add(item.RowKey, page);
+                        totalCoverage += item.Coverage;
                     }
                 }
-                catch (Exception e)
-                {
-                    log.LogError(e, url);
-                }
+            }
+            catch (Exception ex)
+            {
+
             }
 
-            bundleData.Total = overallCoverage / testedUrls * 100;
-            bundleData.Urls = testedUrls;
+            bundleData.Total = totalCoverage / entity.Count;
+            bundleData.Urls = entity.Count;
             archiveCoverageBlob.Write(Encoding.Default.GetBytes(JsonConvert.SerializeObject(bundleData)));
             return new JsonResult(bundleData);
         }
