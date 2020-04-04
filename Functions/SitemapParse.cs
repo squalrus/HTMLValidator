@@ -16,7 +16,7 @@ namespace HTMLValidator
     {
         [FunctionName("SitemapParse")]
         public static async Task Run(
-            [TimerTrigger("0 0 0 * * *", RunOnStartup = true)] TimerInfo myTimer,
+            [TimerTrigger("0 0 0 * * *")] TimerInfo myTimer,
             [Queue("urls"), StorageAccount("AzureWebJobsStorage")] IAsyncCollector<string> msg,
             [Blob("latest/full.txt", FileAccess.Write)] Stream latestFullBlob,
             [Blob("latest/cleaned.txt", FileAccess.Write)] Stream latestCleanedBlob,
