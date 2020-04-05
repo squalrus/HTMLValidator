@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace HTMLValidator.Models.ClassParse
+namespace HTMLValidator.Models.ParseClass
 {
     class ReportClass
     {
