@@ -1,5 +1,5 @@
 using HTMLValidator.Extensions;
-using HTMLValidator.Models.ClassParse;
+using HTMLValidator.Models.ParseClass;
 using HTMLValidator.Models.Validate;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

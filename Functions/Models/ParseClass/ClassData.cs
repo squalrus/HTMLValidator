@@ -1,6 +1,6 @@
 using Microsoft.WindowsAzure.Storage.Table;
 
-namespace HTMLValidator.Models.ClassParse
+namespace HTMLValidator.Models.ParseClass
 {
     public class ClassData : TableEntity
     {

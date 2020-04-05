@@ -103,7 +103,7 @@ namespace HTMLValidator.Models.Validate
                     }
                 }
 
-                report.Total = Math.Truncate((decimal)validNodes / moduleNodes.Count());
+                report.Total = (double)validNodes / moduleNodes.Count();
             }
             else
             {

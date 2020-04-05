@@ -12,9 +12,9 @@ using System.Threading.Tasks;
 
 namespace HTMLValidator
 {
-    public static class SitemapParse
+    public static class ParseSitemap
     {
-        [FunctionName("SitemapParse")]
+        [FunctionName("ParseSitemap")]
         public static async Task Run(
             [TimerTrigger("0 0 0 * * *")] TimerInfo myTimer,
             [Queue("urls"), StorageAccount("AzureWebJobsStorage")] IAsyncCollector<string> msg,

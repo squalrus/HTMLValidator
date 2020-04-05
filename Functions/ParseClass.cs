@@ -1,5 +1,5 @@
 using HTMLValidator.Extensions;
-using HTMLValidator.Models.ClassParse;
+using HTMLValidator.Models.ParseClass;
 using HTMLValidator.Models.Validate;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
@@ -13,9 +13,9 @@ using System.Threading.Tasks;
 
 namespace HTMLValidator
 {
-    public static class ClassParse
+    public static class ParseClass
     {
-        [FunctionName("ClassParse")]
+        [FunctionName("ParseClass")]
         public static async Task Run(
             [TimerTrigger("0 0 1 * * *")] TimerInfo myTimer,
             [Blob("latest/cleaned.txt", FileAccess.Read)] Stream blob,
@@ -23,7 +23,7 @@ namespace HTMLValidator
             [Table("classes{DateTime:yyyyMMdd}")] CloudTable nextClassTable,
             ILogger log)
         {
-            log.LogInformation("Starting ClassParse...");
+            log.LogInformation("Starting ParseClass...");
             StreamReader reader = new StreamReader(blob);
             var content = reader.ReadToEnd();
             var urlList = content.Split('\n');
@@ -63,7 +63,7 @@ namespace HTMLValidator
             var oldTableName = $"classes{DateTime.UtcNow.AddDays(-1).ToString("yyyyMMdd")}";
             var client = nextClassTable.ServiceClient.GetTableReference(oldTableName);
             await client.DeleteIfExistsAsync();
-            log.LogInformation("ClassParse complete!");
+            log.LogInformation("ParseClass complete!");
         }
     }
 }
