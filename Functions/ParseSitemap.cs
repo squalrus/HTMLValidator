@@ -21,6 +21,7 @@ namespace HTMLValidator
             [Blob("latest/full.txt", FileAccess.Write)] Stream latestFullBlob,
             [Blob("latest/cleaned.txt", FileAccess.Write)] Stream latestCleanedBlob,
             [Blob("latest/modules.txt", FileAccess.Write)] Stream latestModulesBlob,
+            [Blob("latest/custom.txt", FileAccess.Read)] Stream customUrlsBlob,
             [Blob("archive-full/{DateTime.Now}.txt", FileAccess.Write)] Stream archiveFullBlob,
             [Blob("archive-cleaned/{DateTime.Now}.txt", FileAccess.Write)] Stream archiveCleanedBlob,
             ILogger log)
@@ -28,9 +29,15 @@ namespace HTMLValidator
             var azurecomUrl = "https://azure.microsoft.com/robotsitemap/en-us/{0}/";
             string sundogPayload = Payload.Get("https://sundog.azure.net/api/modules?status=1", log);
 
+            StreamReader reader = new StreamReader(customUrlsBlob);
+            var content = reader.ReadToEnd();
+            var customUrls = content.Split(Environment.NewLine).Where(x => !string.IsNullOrWhiteSpace(x));
+
             List<string> urls = new List<string>();
             var completed = false;
             var pageNum = 1;
+
+            urls.AddRange(customUrls);
 
             while (!completed)
             {
@@ -69,7 +76,6 @@ namespace HTMLValidator
                     !Regex.IsMatch(x, @"https:\/\/azure\.microsoft\.com\/en-us\/resources\/(.*?)\/") ||
                     (
                         x.Equals("https://azure.microsoft.com/en-us/resources/knowledge-center/") ||
-                        x.Equals("https://azure.microsoft.com/en-us/resources/samples/") ||
                         x.Equals("https://azure.microsoft.com/en-us/resources/templates/") ||
                         x.Equals("https://azure.microsoft.com/en-us/resources/templates-partners/") ||
                         x.Equals("https://azure.microsoft.com/en-us/resources/videos/") ||
@@ -95,7 +101,8 @@ namespace HTMLValidator
             log.LogInformation($"Writing to Blob Storage complete.");
 
             log.LogInformation($"Queueing messages start.");
-            Parallel.ForEach(cleanedUrls, async x => {
+            Parallel.ForEach(cleanedUrls, async x =>
+            {
                 await msg.AddAsync(x);
             });
             log.LogInformation($"Queueing messages complete.");
