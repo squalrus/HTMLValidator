@@ -1,0 +1,44 @@
+# ASP.NET
+# Build and test ASP.NET projects.
+# Add steps that publish symbols, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/apps/aspnet/build-aspnet-4
+
+trigger:
+- master
+
+pr: none
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  project: 'Functions/Functions.csproj'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+
+steps:
+- task: NuGetToolInstaller@1
+  displayName: NuGet Installer
+
+- task: DotNetCoreCLI@2
+  displayName: DotNet Restore
+  inputs:
+    command: 'restore'
+    projects: '$(project)'
+
+- task: DotNetCoreCLI@2
+  displayName: DotNet Publish
+  inputs:
+    command: 'publish'
+    projects: '$(project)'
+    publishWebProjects: false
+    arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+    zipAfterPublish: true
+
+- task: AzureFunctionApp@1
+  displayName: Zip Deploy to Function App
+  inputs:
+    azureSubscription: 'Visual Studio Ultimate with MSDN(a7520299-98c9-4ec4-ac45-0d9ac4c0030d)'
+    appType: 'functionApp'
+    appName: 'htmlvalidator'
+    package: '$(Build.ArtifactStagingDirectory)/**/*.zip'
