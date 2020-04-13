@@ -37,8 +37,6 @@ namespace HTMLValidator
             var completed = false;
             var pageNum = 1;
 
-            urls.AddRange(customUrls);
-
             while (!completed)
             {
                 try
@@ -69,8 +67,9 @@ namespace HTMLValidator
                 pageNum++;
             }
 
-            var distinctUrls = urls.Distinct();
-            var cleanedUrls = distinctUrls.Where(x =>
+            urls = urls.Distinct().ToList();
+
+            var cleanedUrls = urls.Where(x =>
                 !Regex.IsMatch(x, @"https:\/\/azure\.microsoft\.com\/en-us\/blog\/(.*?)\/") &&
                 (
                     !Regex.IsMatch(x, @"https:\/\/azure\.microsoft\.com\/en-us\/resources\/(.*?)\/") ||
@@ -89,14 +88,20 @@ namespace HTMLValidator
                 !Regex.IsMatch(x, @"https:\/\/azure\.microsoft\.com\/en-us\/community\/events\/(.*?)\/") &&
                 !Regex.IsMatch(x, @"https:\/\/azure\.microsoft\.com\/en-us\/industries\/podcast\/(.*?)\/") &&
                 !Regex.IsMatch(x, @"https:\/\/azure\.microsoft\.com\/en-us\/services\/open-datasets\/catalog\/(.*?)\/") &&
-                !Regex.IsMatch(x, @"https:\/\/azure\.microsoft\.com\/en-us\/solutions\/architecture\/(.*?)\/"));
+                !Regex.IsMatch(x, @"https:\/\/azure\.microsoft\.com\/en-us\/solutions\/architecture\/(.*?)\/"))
+                .ToList();
 
+            urls.AddRange(customUrls);
+            cleanedUrls.AddRange(customUrls);
+
+            urls = urls.Distinct().OrderBy(x => x).ToList();
+            cleanedUrls = cleanedUrls.Distinct().OrderBy(x => x).ToList();
 
             log.LogInformation($"Writing to Blob Storage start.");
-            latestFullBlob.Write(Encoding.Default.GetBytes(string.Join('\n', distinctUrls)));
+            latestFullBlob.Write(Encoding.Default.GetBytes(string.Join('\n', urls)));
             latestCleanedBlob.Write(Encoding.Default.GetBytes(string.Join('\n', cleanedUrls)));
             latestModulesBlob.Write(Encoding.Default.GetBytes(sundogPayload));
-            archiveFullBlob.Write(Encoding.Default.GetBytes(string.Join('\n', distinctUrls)));
+            archiveFullBlob.Write(Encoding.Default.GetBytes(string.Join('\n', urls)));
             archiveCleanedBlob.Write(Encoding.Default.GetBytes(string.Join('\n', cleanedUrls)));
             log.LogInformation($"Writing to Blob Storage complete.");
 
