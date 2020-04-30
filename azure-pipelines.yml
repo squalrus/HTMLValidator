@@ -12,8 +12,7 @@ pool:
   vmImage: 'windows-latest'
 
 variables:
-  project: 'Functions/Functions.csproj'
-  buildPlatform: 'Any CPU'
+  project: 'Functions.csproj'
   buildConfiguration: 'Release'
 
 steps:
