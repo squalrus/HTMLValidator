@@ -55,10 +55,7 @@ namespace HTMLValidator
                 log.LogInformation($"Failed to get class data: {ex}");
             }
 
-            return new JsonResult(report, new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore
-            });
+            return new JsonResult(report);
         }
     }
 }
