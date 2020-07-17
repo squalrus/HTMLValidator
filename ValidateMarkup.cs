@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -16,6 +17,8 @@ namespace HTMLValidator
 {
     public static class ValidateMarkup
     {
+        private static HttpClient httpClient = new HttpClient();
+
         [FunctionName("ValidateMarkup")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
@@ -31,7 +34,7 @@ namespace HTMLValidator
 
             try
             {
-                string payload = Payload.Get("https://sundog.azure.net/api/modules?status=1", log);
+                string payload = await Payload.Get("https://sundog.azure.net/api/modules?status=1", httpClient, log);
                 schema = JsonConvert.DeserializeObject<ModuleSchema[]>(payload);
             }
             catch (Exception ex)

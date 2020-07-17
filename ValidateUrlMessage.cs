@@ -7,14 +7,18 @@ using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace HTMLValidator
 {
     public static class ValidateUrlMessage
     {
+        private static HttpClient httpClient = new HttpClient();
+
         [FunctionName("ValidateUrlMessage")]
         [return: Table("coverage")]
-        public static Coverage Run(
+        public static async Task<Coverage> Run(
             [QueueTrigger("urls", Connection = "AzureWebJobsStorage")] string myQueueItem,
             [Blob("latest/modules.txt", FileAccess.Read)] string modulePayload,
             ILogger log)
@@ -37,7 +41,7 @@ namespace HTMLValidator
 
             try
             {
-                string html = Payload.Get(myQueueItem, log);
+                string html = await Payload.Get(myQueueItem, httpClient, log);
                 report = new Validator(html, schema).Process();
 
                 return new Coverage

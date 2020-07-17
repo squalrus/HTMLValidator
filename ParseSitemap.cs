@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -14,9 +15,11 @@ namespace HTMLValidator
 {
     public static class ParseSitemap
     {
+        private static HttpClient httpClient = new HttpClient();
+
         [FunctionName("ParseSitemap")]
         public static async Task Run(
-            [TimerTrigger("0 0 0 * * *")] TimerInfo myTimer,
+            [TimerTrigger("0 0 0 * * *", RunOnStartup = true)] TimerInfo myTimer,
             [Queue("urls"), StorageAccount("AzureWebJobsStorage")] IAsyncCollector<string> msg,
             [Blob("latest/full.txt", FileAccess.Write)] Stream latestFullBlob,
             [Blob("latest/cleaned.txt", FileAccess.Write)] Stream latestCleanedBlob,
@@ -27,7 +30,7 @@ namespace HTMLValidator
             ILogger log)
         {
             var azurecomUrl = "https://azure.microsoft.com/robotsitemap/en-us/{0}/";
-            string sundogPayload = Payload.Get("https://sundog.azure.net/api/modules?status=1", log);
+            string sundogPayload = await Payload.Get("https://sundog.azure.net/api/modules?status=1", httpClient, log);
 
             StreamReader reader = new StreamReader(customUrlsBlob);
             var content = reader.ReadToEnd();
@@ -41,7 +44,7 @@ namespace HTMLValidator
             {
                 try
                 {
-                    string payload = Payload.Get(string.Format(azurecomUrl, pageNum), log);
+                    string payload = await Payload.Get(string.Format(azurecomUrl, pageNum), httpClient, log);
                     log.LogInformation($"Processing page {pageNum}...");
 
                     var matches = Regex.Matches(payload, @"<loc>(.*?)<\/loc>");
