@@ -27,8 +27,7 @@ namespace HTMLValidator
             [Table("coverage")] CloudTable cloudTable,
             ILogger log)
         {
-            log.LogInformation("C# HTTP trigger function processed a request.");
-
+            log.LogInformation("Starting GetCoverage...");
             StreamReader reader = new StreamReader(blob);
             var content = reader.ReadToEnd();
             var urlList = content.Split('\n');
@@ -44,6 +43,7 @@ namespace HTMLValidator
             {
                 try
                 {
+                    log.LogInformation($"Processing URL {url.ToString()}");
                     var query = new TableQuery<Coverage>().Where(
                         TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, url.ToSlug())
                     ).Take(1);
@@ -76,6 +76,7 @@ namespace HTMLValidator
             bundleData.Total = overallCoverage / testedUrls * 100;
             bundleData.Urls = testedUrls;
             archiveCoverageBlob.Write(Encoding.Default.GetBytes(JsonConvert.SerializeObject(bundleData)));
+            log.LogInformation("GetCoverage complete!");
             return new JsonResult(bundleData);
         }
     }

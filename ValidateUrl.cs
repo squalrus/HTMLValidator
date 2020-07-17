@@ -9,12 +9,15 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace HTMLValidator
 {
     public static class ValidateUrl
     {
+        private static HttpClient httpClient = new HttpClient();
+
         [FunctionName("ValidateUrl")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
@@ -27,7 +30,7 @@ namespace HTMLValidator
 
             try
             {
-                string payload = Payload.Get("https://sundog.azure.net/api/modules?status=1", log);
+                string payload = await Payload.Get("https://sundog.azure.net/api/modules?status=1", httpClient, log);
                 schema = JsonConvert.DeserializeObject<ModuleSchema[]>(payload);
             }
             catch (Exception ex)
@@ -37,7 +40,7 @@ namespace HTMLValidator
 
             try
             {
-                string html = Payload.Get(testUrl, log);
+                string html = await Payload.Get(testUrl, httpClient, log);
                 report = new Validator(html, schema).Process();
             }
             catch (WebException ex)
