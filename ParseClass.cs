@@ -15,6 +15,7 @@ namespace HTMLValidator
 {
     public static class ParseClass
     {
+        [Disable]
         [FunctionName("ParseClass")]
         public static async Task Run(
             [TimerTrigger("0 0 1 * * *")] TimerInfo myTimer,

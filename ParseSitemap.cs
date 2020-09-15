@@ -17,6 +17,7 @@ namespace HTMLValidator
     {
         private static HttpClient httpClient = new HttpClient();
 
+        [Disable]
         [FunctionName("ParseSitemap")]
         public static async Task Run(
             [TimerTrigger("0 0 0 * * *", RunOnStartup = true)] TimerInfo myTimer,
