@@ -41,7 +41,7 @@ namespace HTMLValidator
             try
             {
                 string html = await Payload.Get(testUrl, httpClient, log);
-                report = new Validator(html, schema).Process();
+                report = await new Validator(html, schema, httpClient, log).Process();
             }
             catch (WebException ex)
             {

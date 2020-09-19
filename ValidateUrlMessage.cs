@@ -42,7 +42,7 @@ namespace HTMLValidator
             try
             {
                 string html = await Payload.Get(myQueueItem, httpClient, log);
-                report = new Validator(html, schema).Process();
+                report = await new Validator(html, schema, httpClient, log).Process();
 
                 return new Coverage
                 {
