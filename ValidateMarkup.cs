@@ -44,7 +44,7 @@ namespace HTMLValidator
 
             try
             {
-                report = new Validator(html, schema).Process();
+                report = await new Validator(html, schema, httpClient, log).Process();
             }
             catch (WebException ex)
             {

@@ -1,11 +1,8 @@
 {
     "version": "2.0",
     "functions": [
-        "GetClass",
         "GetCoverage",
-        "GetModule",
-        "ValidateMarkup",
-        "ValidateUrl",
-        "ValidateUrlMessage"
+        "ValidateUrlMessage",
+        "ParseSitemap"
     ]
 }

@@ -1,11 +1,14 @@
 using HtmlAgilityPack;
 using HTMLValidator.Extensions;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Schema;
+using Json.Schema;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace HTMLValidator.Models.Validate
 {
@@ -13,13 +16,17 @@ namespace HTMLValidator.Models.Validate
     {
         private string _html;
         private ModuleSchema[] _schema;
-        public Validator(string html, ModuleSchema[] schema)
+        private HttpClient _client;
+        private ILogger _logger;
+        public Validator(string html, ModuleSchema[] schema, HttpClient client, ILogger logger)
         {
             _html = html;
             _schema = schema;
+            _client = client;
+            _logger = logger;
         }
 
-        public ReportPage Process()
+        public async Task<ReportPage> Process()
         {
             var report = new ReportPage
             {
@@ -64,12 +71,10 @@ namespace HTMLValidator.Models.Validate
             {
                 foreach (var node in moduleNodes)
                 {
-                    var json = JsonConvert.SerializeObject(node,
-                        Formatting.Indented,
-                        new JsonSerializerSettings()
-                        {
-                            ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-                        });
+                    var nodeJson = JsonSerializer.Serialize(node, new JsonSerializerOptions
+                    {
+                        WriteIndented = true
+                    });
 
                     if (!node.Attributes.ContainsKey("data-module"))
                     {
@@ -78,26 +83,37 @@ namespace HTMLValidator.Models.Validate
                     else
                     {
                         var module = node.Attributes.Where(x => x.Key == "data-module").First().Value.First();
-                        var moduleSchema = _schema.FirstOrDefault(x => x.Slug == module)?.Schema?.ToString();
-                        JSchemaUrlResolver resolver = new JSchemaUrlResolver();
-                        IList<string> messages;
+                        var schemaJson = _schema.FirstOrDefault(x => x.Slug == module)?.Schema?.ToString();
 
-                        if (moduleSchema == null)
+                        if (schemaJson == null)
                         {
                             report.Modules.Add(new ReportModule(module, "schema not defined"));
                         }
                         else
                         {
-                            var isValid = JObject.Parse(json).IsValid(JSchema.Parse(moduleSchema, resolver), out messages);
+                            var json = JsonDocument.Parse(nodeJson);
+                            var schema = JsonSchema.FromText(schemaJson);
 
-                            if (isValid)
+                            string pattern = @"\$ref\"":\s*\""(.*?)\""";
+                            Match m = Regex.Match(schemaJson, pattern);
+                            while (m.Success)
+                            {
+                                var url = m.Groups[1].Value;
+                                string subSchema = await Payload.Get(url, _client, _logger);
+                                SchemaRegistry.Global.Register(new Uri(url), JsonSchema.FromText(subSchema));
+                                m = m.NextMatch();
+                            }
+
+                            var results = schema.Validate(json.RootElement);
+
+                            if (results.IsValid)
                             {
                                 report.Modules.Add(new ReportModule(module, "pass"));
                                 validNodes++;
                             }
                             else
                             {
-                                report.Modules.Add(new ReportModule(module, "fail", string.Join("\n", messages)));
+                                report.Modules.Add(new ReportModule(module, "fail", string.Join("\n", results.Message)));
                             }
                         }
                     }
