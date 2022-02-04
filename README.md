@@ -1,4 +1,6 @@
-[![Build Status](https://squalrus.visualstudio.com/htmlvalidator/_apis/build/status/HTMLValidator%20Production?branchName=master)](https://squalrus.visualstudio.com/htmlvalidator/_build/latest?definitionId=12&branchName=master)
+## Update
+
+This repository is not longer maintained. Code was moved elsewhere.
 
 ## Debugging
 
